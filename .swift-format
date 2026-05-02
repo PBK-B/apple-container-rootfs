@@ -1,0 +1,8 @@
+version: 1.0
+indentation: 4
+tabWidth: 4
+maximumBlankLines: 1
+lineLength: 120
+prioritizeKeepingFunctionOutput: true
+ifdefIndentWidth: 4
+fragment: false
