@@ -18,6 +18,7 @@ extension ContainerRootFSCommand {
         var mode: RootfsMode = .rw
 
         func run() throws {
+            try ContainerIDValidator.validate(containerID)
             let workspace = RootfsWorkspace(root: URL(fileURLWithPath: root), logger: .init(label: "rootfs.plan"))
             let layout = workspace.layout(for: containerID, mode: mode)
             print(layout.description)

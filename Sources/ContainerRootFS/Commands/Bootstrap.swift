@@ -27,12 +27,13 @@ extension ContainerRootFSCommand {
         var platform: String = "linux/arm64"
 
         func run() async throws {
+            try ContainerIDValidator.validate(containerID)
             let workspace = RootfsWorkspace(root: URL(fileURLWithPath: root), logger: Logger(label: "rootfs.bootstrap"))
             let layout = workspace.layout(for: containerID, mode: mode)
             let progress = RootfsProgress(label: "bootstrap")
 
             try workspace.prepare(layout: layout)
-            let builder = try RootfsBuilder(storeRoot: workspace.root.appendingPathComponent("image-store", isDirectory: true), logger: Logger(label: "rootfs.bootstrap"))
+            let builder = try RootfsBuilder(storeRoot: RuntimePaths.imageStoreRoot(in: workspace.root), logger: Logger(label: "rootfs.bootstrap"))
             progress.setDescription("Pulling image")
             progress.setItemsName("blobs")
             try await builder.build(imageReference: image, platform: try Platform(from: platform), layout: layout, progress: progress.handler)

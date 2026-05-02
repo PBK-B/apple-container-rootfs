@@ -67,8 +67,10 @@ extension ContainerRootFSCommand {
         var command: [String] = []
 
         func run() async throws {
+            try ContainerIDValidator.validate(containerID)
             Self.trace("loading workspace")
-            let workspace = RootfsWorkspace(root: URL(fileURLWithPath: root), logger: .init(label: "rootfs.run"))
+            let workspaceRoot = URL(fileURLWithPath: root)
+            let workspace = RootfsWorkspace(root: workspaceRoot, logger: .init(label: "rootfs.run"))
             let manifest = try workspace.manifest(containerID: containerID)
             let layout = workspace.layout(for: manifest.containerID, mode: manifest.mode)
             _ = try workspace.prepareRuntimeRoot(layout: layout, refresh: refreshWritableLayer)
@@ -103,9 +105,8 @@ extension ContainerRootFSCommand {
             let memoryInBytes = try memory.map { try MemoryParser.parse($0) }
 
             Self.trace("initializing manager")
-            let managerRoot = URL(fileURLWithPath: root).appendingPathComponent("runtime", isDirectory: true)
-            let managerContainerRoot = managerRoot
-                .appendingPathComponent("containers", isDirectory: true)
+            let managerRoot = RuntimePaths.runtimeRoot(in: workspaceRoot)
+            let managerContainerRoot = RuntimePaths.managerContainersRoot(in: workspaceRoot)
                 .appendingPathComponent(containerID, isDirectory: true)
             try FileManager.default.createDirectory(at: managerContainerRoot, withIntermediateDirectories: true)
 

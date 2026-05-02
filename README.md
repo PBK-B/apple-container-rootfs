@@ -153,6 +153,13 @@ Each container is stored under `containers/<id>/` with:
 - `writable.ext4` for `ro-layer`
 - `rootfs-manifest.json`
 
+Internal runtime data is stored separately under `containers/.runtime/`:
+- `images/` for pulled OCI image content
+- `networks/` for named network manifests
+- `containers/` for runtime manager state
+
+The container identifier `.runtime` is reserved for internal runtime data and cannot be used with `--container-id`.
+
 ## Example
 
 ```bash

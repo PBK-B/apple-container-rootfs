@@ -15,6 +15,7 @@ extension ContainerRootFSCommand {
         var root: String = FileManager.default.currentDirectoryPath + "/containers"
 
         func run() throws {
+            try ContainerIDValidator.validate(containerID)
             let workspace = RootfsWorkspace(root: URL(fileURLWithPath: root), logger: .init(label: "rootfs.remove"))
             try workspace.remove(containerID: containerID)
         }

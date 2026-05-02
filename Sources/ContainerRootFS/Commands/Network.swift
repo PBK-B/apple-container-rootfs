@@ -19,7 +19,7 @@ extension ContainerRootFSCommand.NetworkCommand {
 
         @Argument var name: String
         @Option(name: .long, help: "Runtime root")
-        var root: String = FileManager.default.currentDirectoryPath + "/containers/runtime"
+        var root: String = RuntimePaths.defaultRuntimeRootPath(from: FileManager.default.currentDirectoryPath)
 
         func run() throws {
             _ = try NamedNetwork.ensure(name: name, root: URL(fileURLWithPath: root))
@@ -31,7 +31,7 @@ extension ContainerRootFSCommand.NetworkCommand {
         static let configuration = CommandConfiguration(commandName: "ls", abstract: "List named networks")
 
         @Option(name: .long, help: "Runtime root")
-        var root: String = FileManager.default.currentDirectoryPath + "/containers/runtime"
+        var root: String = RuntimePaths.defaultRuntimeRootPath(from: FileManager.default.currentDirectoryPath)
 
         func run() throws {
             let networksRoot = URL(fileURLWithPath: root).appendingPathComponent("networks", isDirectory: true)
@@ -48,7 +48,7 @@ extension ContainerRootFSCommand.NetworkCommand {
 
         @Argument var name: String
         @Option(name: .long, help: "Runtime root")
-        var root: String = FileManager.default.currentDirectoryPath + "/containers/runtime"
+        var root: String = RuntimePaths.defaultRuntimeRootPath(from: FileManager.default.currentDirectoryPath)
 
         func run() throws {
             let network = try NamedNetwork.ensure(name: name, root: URL(fileURLWithPath: root))
@@ -62,7 +62,7 @@ extension ContainerRootFSCommand.NetworkCommand {
 
         @Argument var name: String
         @Option(name: .long, help: "Runtime root")
-        var root: String = FileManager.default.currentDirectoryPath + "/containers/runtime"
+        var root: String = RuntimePaths.defaultRuntimeRootPath(from: FileManager.default.currentDirectoryPath)
 
         func run() throws {
             let path = URL(fileURLWithPath: root)
