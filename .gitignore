@@ -7,10 +7,10 @@ DerivedData/
 *.xcuserdatad/
 *.swp
 *.swo
-containers/
-runtime/
 *.ext4
 *.log
+
+containers/
 
 .vscode
 
