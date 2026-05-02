@@ -27,6 +27,39 @@ extension ContainerRootFSCommand {
         @Flag(name: .long, help: "Recreate the writable layer before start")
         var refreshWritableLayer: Bool = false
 
+        @Option(name: .long, help: "Bind mount in the form /host:/container[:ro]")
+        var bind: [String] = []
+
+        @Option(name: .long, help: "Mount specification in the form type=bind,source=...,target=...[,readonly]")
+        var mount: [String] = []
+
+        @Option(name: .long, help: "Named network to attach to")
+        var network: String?
+
+        @Option(name: .long, help: "Environment variable in the form KEY=VALUE")
+        var env: [String] = []
+
+        @Option(name: .long, help: "Working directory inside the container")
+        var workdir: String?
+
+        @Option(name: .long, help: "Number of virtual CPUs")
+        var cpus: Int?
+
+        @Option(name: .long, help: "Memory limit, e.g. 512m or 1g")
+        var memory: String?
+
+        @Option(name: .long, help: "DNS nameserver")
+        var dns: [String] = []
+
+        @Option(name: .customLong("dns-search"), help: "DNS search domain")
+        var dnsSearch: [String] = []
+
+        @Option(name: .customLong("dns-option"), help: "DNS resolver option")
+        var dnsOption: [String] = []
+
+        @Option(name: .customLong("add-host"), help: "Static host entry in the form hostname:ip")
+        var addHost: [String] = []
+
         @Flag(name: .long, inversion: .prefixedEnableDisable, help: "Allocate a terminal for interactive commands")
         var tty: Bool?
 
@@ -61,6 +94,13 @@ extension ContainerRootFSCommand {
             let writableLayer: Containerization.Mount? = manifest.mode == .roLayer
                 ? Containerization.Mount.block(format: "ext4", source: layout.writableLayer.path, destination: "/", options: [])
                 : nil
+            let extraMounts = try MountFactory.makeMounts(bindMounts: bind, mountSpecs: mount)
+            let hosts = try HostsFactory.makeHosts(entries: addHost)
+            let dnsConfig = dns.isEmpty && dnsSearch.isEmpty && dnsOption.isEmpty
+                ? nil
+                : DNS(nameservers: dns.isEmpty ? DNS.defaultNameservers : dns, searchDomains: dnsSearch, options: dnsOption)
+            try dnsConfig?.validate()
+            let memoryInBytes = try memory.map { try MemoryParser.parse($0) }
 
             Self.trace("initializing manager")
             let managerRoot = URL(fileURLWithPath: root).appendingPathComponent("runtime", isDirectory: true)
@@ -69,19 +109,47 @@ extension ContainerRootFSCommand {
                 .appendingPathComponent(containerID, isDirectory: true)
             try FileManager.default.createDirectory(at: managerContainerRoot, withIntermediateDirectories: true)
 
-            var manager = try await ContainerManager(
-                kernel: Kernel(path: URL(fileURLWithPath: resolvedKernel), platform: .linuxArm),
-                initfsReference: resolvedInitfsReference,
-                root: managerRoot
-            )
+            let runtimeManager: ContainerManager
+            if network == "none" {
+                runtimeManager = try await ContainerManager(
+                    kernel: Kernel(path: URL(fileURLWithPath: resolvedKernel), platform: .linuxArm),
+                    initfsReference: resolvedInitfsReference,
+                    root: managerRoot
+                )
+            } else if #available(macOS 26.0, *), let network {
+                let namedNetwork = try NamedNetwork.ensure(name: network, root: managerRoot)
+                runtimeManager = try await ContainerManager(
+                    kernel: Kernel(path: URL(fileURLWithPath: resolvedKernel), platform: .linuxArm),
+                    initfsReference: resolvedInitfsReference,
+                    root: managerRoot,
+                    network: try namedNetwork.makeNetwork()
+                )
+            } else {
+                runtimeManager = try await ContainerManager(
+                    kernel: Kernel(path: URL(fileURLWithPath: resolvedKernel), platform: .linuxArm),
+                    initfsReference: resolvedInitfsReference,
+                    root: managerRoot
+                )
+            }
+            var manager = runtimeManager
             Self.trace("loading image")
             let image = try await manager.imageStore.get(reference: manifest.imageReference, pull: true)
 
             do {
                 Self.trace("creating container")
-                let container = try await manager.create(containerID, image: image, rootfs: rootfs, writableLayer: writableLayer, networking: false) { config in
+                let container = try await manager.create(containerID, image: image, rootfs: rootfs, writableLayer: writableLayer, networking: network != "none") { config in
                     config.process.arguments = [executable] + arguments
-                    config.process.workingDirectory = "/"
+                    config.process.workingDirectory = workdir ?? "/"
+                    config.process.environmentVariables.append(contentsOf: env)
+                    if let cpus {
+                        config.cpus = cpus
+                    }
+                    if let memoryInBytes {
+                        config.memoryInBytes = memoryInBytes
+                    }
+                    config.mounts.append(contentsOf: extraMounts)
+                    config.hosts = hosts
+                    config.dns = dnsConfig
                     if shouldUseTTY, let terminal {
                         config.process.setTerminalIO(terminal: terminal)
                     }
@@ -106,6 +174,28 @@ extension ContainerRootFSCommand {
                 if status.exitCode != 0 {
                     throw ExitCode(status.exitCode)
                 }
+
+                try workspace.writeLastRun(
+                    containerID: containerID,
+                    configuration: LastRunConfiguration(
+                        command: processArguments,
+                        tty: shouldUseTTY,
+                        kernel: resolvedKernel,
+                        initfsReference: resolvedInitfsReference,
+                        network: network,
+                        bindMounts: bind,
+                        mountSpecs: mount,
+                        dns: dns,
+                        dnsSearch: dnsSearch,
+                        dnsOptions: dnsOption,
+                        hosts: addHost,
+                        environment: env,
+                        workingDirectory: workdir,
+                        cpus: cpus,
+                        memory: memory,
+                        recordedAt: Date()
+                    )
+                )
             } catch {
                 Self.trace("run failed: \(String(reflecting: error))")
                 throw error

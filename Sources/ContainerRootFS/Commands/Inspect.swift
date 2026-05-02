@@ -17,7 +17,8 @@ extension ContainerRootFSCommand {
         func run() throws {
             let workspace = RootfsWorkspace(root: URL(fileURLWithPath: root), logger: .init(label: "container-rootfs.inspect"))
             let manifest = try workspace.manifest(containerID: containerID)
-            let data = try JSONEncoder.pretty().encode(manifest)
+            let output = InspectOutput(workspace: manifest, lastRun: try workspace.lastRun(containerID: containerID))
+            let data = try JSONEncoder.pretty().encode(output)
             print(String(decoding: data, as: UTF8.self))
         }
     }

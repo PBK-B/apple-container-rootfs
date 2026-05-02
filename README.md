@@ -1,10 +1,10 @@
 # container-rootfs
 
-`container-rootfs` is a CLI for building and running Linux containers from OCI images with host-backed storage.
+`container-rootfs` is a project for preparing and building Linux root filesystems (rootfs) tailored for Apple’s container tool. It provides minimal, customizable system environments required to boot and run containers inside lightweight virtual machines on macOS.
 
-It supports two workspace modes:
-- `rw`: the unpacked root filesystem lives directly on the host
-- `ro-layer`: a read-only base plus a host-backed writable `ext4` layer
+The project focuses on creating efficient and portable rootfs images, enabling fast startup times and reduced resource usage. It supports flexible customization, allowing developers to tailor the filesystem for specific workloads or experiments.
+
+By complementing Apple’s container ecosystem, apple-container-rootfs helps bridge gaps in root filesystem provisioning and simplifies low-level container setup. It is particularly useful for developers exploring Apple’s VM-based container architecture, building custom environments, or optimizing container performance.
 
 ## Build
 
@@ -42,6 +42,81 @@ swift run container-rootfs run \
   -- /bin/sh
 ```
 
+### Run with a named network
+
+```bash
+swift run container-rootfs network create devnet
+swift run container-rootfs run \
+  --container-id demo \
+  --network devnet \
+  -- /bin/sh
+```
+
+Disable networking entirely:
+
+```bash
+swift run container-rootfs run \
+  --container-id demo \
+  --network none \
+  -- /bin/sh
+```
+
+Configure DNS and hosts:
+
+```bash
+swift run container-rootfs run \
+  --container-id demo \
+  --network devnet \
+  --dns 1.1.1.1 \
+  --dns 8.8.8.8 \
+  --dns-search example.internal \
+  --dns-option ndots:1 \
+  --add-host api.local:10.0.0.10 \
+  -- /bin/sh
+```
+
+Configure environment, working directory, CPUs, and memory:
+
+```bash
+swift run container-rootfs run \
+  --container-id demo \
+  --env APP_ENV=dev \
+  --env LOG_LEVEL=debug \
+  --workdir /workspace \
+  --cpus 2 \
+  --memory 1g \
+  -- /bin/sh
+```
+
+### Run with host mounts
+
+Bind a host directory:
+
+```bash
+swift run container-rootfs run \
+  --container-id demo \
+  --bind /tmp:/data \
+  -- /bin/sh
+```
+
+Bind a single host file read-only:
+
+```bash
+swift run container-rootfs run \
+  --container-id demo \
+  --bind /etc/hosts:/tmp/hosts:ro \
+  -- /bin/sh
+```
+
+Use `--mount` syntax:
+
+```bash
+swift run container-rootfs run \
+  --container-id demo \
+  --mount type=bind,source=/tmp,target=/data,readonly \
+  -- /bin/sh
+```
+
 Defaults:
 - `--kernel` is optional. The CLI will try `CONTAINER_ROOTFS_KERNEL`, `./vmlinux`, `./bin/vmlinux`, and common Kata kernel paths.
 - `--initfs-reference` is optional. The default is `ghcr.io/apple/containerization/vminit:0.31.0`.
@@ -58,6 +133,7 @@ swift run container-rootfs remove --container-id demo
 - `plan`: show the workspace layout
 - `bootstrap`: pull an OCI image and create the workspace on disk
 - `inspect`: print workspace metadata
+- `network`: create, list, inspect, and remove named networks
 - `run`: launch the container from the workspace
 - `remove`: delete the workspace
 

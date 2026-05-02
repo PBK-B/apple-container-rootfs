@@ -59,4 +59,41 @@ final class RootfsWorkspaceTests: XCTestCase {
             )
         }
     }
+
+    func testLastRunRoundTrip() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let workspace = RootfsWorkspace(root: root, logger: .init(label: "test"))
+        let layout = workspace.layout(for: "abc123", mode: .rw)
+        try workspace.prepare(layout: layout)
+
+        let configuration = LastRunConfiguration(
+            command: ["/bin/sh"],
+            tty: true,
+            kernel: "/kernel",
+            initfsReference: "ghcr.io/apple/containerization/vminit:0.31.0",
+            network: "devnet",
+            bindMounts: ["/tmp:/data"],
+            mountSpecs: ["type=bind,source=/tmp,target=/data"],
+            dns: ["1.1.1.1"],
+            dnsSearch: ["example.internal"],
+            dnsOptions: ["ndots:1"],
+            hosts: ["api.local:10.0.0.10"],
+            environment: ["APP_ENV=dev"],
+            workingDirectory: "/workspace",
+            cpus: 2,
+            memory: "1g",
+            recordedAt: Date()
+        )
+
+        try workspace.writeLastRun(containerID: "abc123", configuration: configuration)
+        let decoded = try workspace.lastRun(containerID: "abc123")
+
+        XCTAssertEqual(decoded?.command, ["/bin/sh"])
+        XCTAssertEqual(decoded?.network, "devnet")
+        XCTAssertEqual(decoded?.environment, ["APP_ENV=dev"])
+        XCTAssertEqual(decoded?.cpus, 2)
+        XCTAssertEqual(decoded?.memory, "1g")
+    }
 }

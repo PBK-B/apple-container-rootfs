@@ -27,6 +27,12 @@ struct RootfsWorkspace {
     let root: URL
     let logger: Logger
 
+    private func lastRunPath(containerID: String) -> URL {
+        root
+            .appendingPathComponent(containerID, isDirectory: true)
+            .appendingPathComponent("last-run.json", isDirectory: false)
+    }
+
     func layout(for containerID: String, mode: RootfsMode) -> RootfsLayout {
         RootfsLayout(
             root: root,
@@ -97,6 +103,23 @@ struct RootfsWorkspace {
         let containerRoot = root.appendingPathComponent(containerID, isDirectory: true)
         guard FileManager.default.fileExists(atPath: containerRoot.path) else { return }
         try FileManager.default.removeItem(at: containerRoot)
+    }
+
+    func writeLastRun(containerID: String, configuration: LastRunConfiguration) throws {
+        let path = lastRunPath(containerID: containerID)
+        let data = try JSONEncoder.pretty().encode(configuration)
+        try data.write(to: path, options: [.atomic])
+    }
+
+    func lastRun(containerID: String) throws -> LastRunConfiguration? {
+        let path = lastRunPath(containerID: containerID)
+        guard FileManager.default.fileExists(atPath: path.path) else {
+            return nil
+        }
+        let data = try Data(contentsOf: path)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(LastRunConfiguration.self, from: data)
     }
 
     func manifest(containerID: String) throws -> RootfsManifest {
