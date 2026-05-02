@@ -21,6 +21,7 @@ let package = Package(
     name: "container-rootfs",
     platforms: [.macOS(.v15)],
     products: [
+        .executable(name: "rootfs", targets: ["ContainerRootFS"]),
         .executable(name: "container-rootfs", targets: ["ContainerRootFS"]),
     ],
     dependencies: [

@@ -1,0 +1,3 @@
+abstract = "Rootfs workspace management plugin"
+author = "Apple"
+version = 0.1

@@ -39,7 +39,7 @@ final class RootfsWorkspaceTests: XCTestCase {
         XCTAssertThrowsError(try workspace.manifest(containerID: "missing")) { error in
             XCTAssertEqual(
                 error.localizedDescription,
-                "Container workspace 'missing' was not found under \(root.path). Run 'container-rootfs bootstrap --container-id missing ...' first."
+                "Container workspace 'missing' was not found under \(root.path). Run 'rootfs bootstrap --container-id missing ...' first."
             )
         }
     }
@@ -55,7 +55,7 @@ final class RootfsWorkspaceTests: XCTestCase {
         XCTAssertThrowsError(try workspace.manifest(containerID: "abc123")) { error in
             XCTAssertEqual(
                 error.localizedDescription,
-                "Rootfs manifest for 'abc123' was not found at \(layout.containerRoot.appendingPathComponent("rootfs-manifest.json").path). Recreate the workspace with 'container-rootfs bootstrap'."
+                "Rootfs manifest for 'abc123' was not found at \(layout.containerRoot.appendingPathComponent("rootfs-manifest.json").path). Recreate the workspace with 'rootfs bootstrap'."
             )
         }
     }

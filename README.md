@@ -4,12 +4,21 @@
 
 The project focuses on creating efficient and portable rootfs images, enabling fast startup times and reduced resource usage. It supports flexible customization, allowing developers to tailor the filesystem for specific workloads or experiments.
 
-By complementing Apple’s container ecosystem, apple-container-rootfs helps bridge gaps in root filesystem provisioning and simplifies low-level container setup. It is particularly useful for developers exploring Apple’s VM-based container architecture, building custom environments, or optimizing container performance.
+By complementing Apple’s container ecosystem, container-rootfs helps bridge gaps in root filesystem provisioning and simplifies low-level container setup. It is particularly useful for developers exploring Apple’s VM-based container architecture, building custom environments, or optimizing container performance.
 
 ## Build
 
 ```bash
 swift build
+```
+
+To install as a host-loadable CLI plugin, copy the built `rootfs` binary and `Sources/Plugins/Rootfs/config.toml` into a plugin directory shaped like `libexec/container-plugins/rootfs/`. See [docs/rootfs-plugin.md](docs/rootfs-plugin.md) for the full plugin installation flow.
+
+One-step install after a local build:
+
+```bash
+swift build
+./scripts/install-rootfs-plugin.sh
 ```
 
 To run virtual machines on macOS, the executable must be signed with the virtualization entitlement. For local development, sign the built binary after `swift build`:

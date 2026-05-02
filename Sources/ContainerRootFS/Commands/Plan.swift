@@ -18,7 +18,7 @@ extension ContainerRootFSCommand {
         var mode: RootfsMode = .rw
 
         func run() throws {
-            let workspace = RootfsWorkspace(root: URL(fileURLWithPath: root), logger: .init(label: "container-rootfs.plan"))
+            let workspace = RootfsWorkspace(root: URL(fileURLWithPath: root), logger: .init(label: "rootfs.plan"))
             let layout = workspace.layout(for: containerID, mode: mode)
             print(layout.description)
         }

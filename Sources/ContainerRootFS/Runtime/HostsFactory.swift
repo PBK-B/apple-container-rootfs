@@ -8,7 +8,7 @@ enum HostsFactory {
         }
 
         let mapped = try entries.map(parseEntry)
-        return Hosts(entries: mapped, comment: "managed by container-rootfs")
+        return Hosts(entries: mapped, comment: "managed by rootfs")
     }
 
     private static func parseEntry(_ raw: String) throws -> Hosts.Entry {

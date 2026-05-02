@@ -68,7 +68,7 @@ extension ContainerRootFSCommand {
 
         func run() async throws {
             Self.trace("loading workspace")
-            let workspace = RootfsWorkspace(root: URL(fileURLWithPath: root), logger: .init(label: "container-rootfs.run"))
+            let workspace = RootfsWorkspace(root: URL(fileURLWithPath: root), logger: .init(label: "rootfs.run"))
             let manifest = try workspace.manifest(containerID: containerID)
             let layout = workspace.layout(for: manifest.containerID, mode: manifest.mode)
             _ = try workspace.prepareRuntimeRoot(layout: layout, refresh: refreshWritableLayer)
@@ -203,7 +203,7 @@ extension ContainerRootFSCommand {
         }
 
         private static func trace(_ message: String) {
-            let text = "[container-rootfs] \(message)\n"
+            let text = "[rootfs] \(message)\n"
             if let data = text.data(using: .utf8) {
                 FileHandle.standardError.write(data)
             }

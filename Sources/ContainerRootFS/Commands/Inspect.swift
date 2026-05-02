@@ -15,7 +15,7 @@ extension ContainerRootFSCommand {
         var root: String = FileManager.default.currentDirectoryPath + "/containers"
 
         func run() throws {
-            let workspace = RootfsWorkspace(root: URL(fileURLWithPath: root), logger: .init(label: "container-rootfs.inspect"))
+            let workspace = RootfsWorkspace(root: URL(fileURLWithPath: root), logger: .init(label: "rootfs.inspect"))
             let manifest = try workspace.manifest(containerID: containerID)
             let output = InspectOutput(workspace: manifest, lastRun: try workspace.lastRun(containerID: containerID))
             let data = try JSONEncoder.pretty().encode(output)

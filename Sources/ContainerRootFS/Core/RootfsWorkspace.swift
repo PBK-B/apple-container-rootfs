@@ -12,11 +12,11 @@ enum RootfsWorkspaceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .containerNotFound(let id, let root):
-            return "Container workspace '\(id)' was not found under \(root). Run 'container-rootfs bootstrap --container-id \(id) ...' first."
+            return "Container workspace '\(id)' was not found under \(root). Run 'rootfs bootstrap --container-id \(id) ...' first."
         case .manifestNotFound(let id, let path):
-            return "Rootfs manifest for '\(id)' was not found at \(path). Recreate the workspace with 'container-rootfs bootstrap'."
+            return "Rootfs manifest for '\(id)' was not found at \(path). Recreate the workspace with 'rootfs bootstrap'."
         case .lowerRootfsNotFound(let id, let path):
-            return "Lower rootfs for '\(id)' was not found at \(path). Recreate the workspace with 'container-rootfs bootstrap'."
+            return "Lower rootfs for '\(id)' was not found at \(path). Recreate the workspace with 'rootfs bootstrap'."
         case .writableLayerNotFound(let id, let path):
             return "Writable layer for '\(id)' was not found at \(path). Recreate it with '--refresh-writable-layer' or rerun bootstrap."
         }
