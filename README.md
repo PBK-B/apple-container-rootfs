@@ -6,6 +6,8 @@ The project focuses on creating efficient and portable rootfs images, enabling f
 
 By complementing Apple’s container ecosystem, container-rootfs helps bridge gaps in root filesystem provisioning and simplifies low-level container setup. It is particularly useful for developers exploring Apple’s VM-based container architecture, building custom environments, or optimizing container performance.
 
+> **WARN: This is a failed experiment. In the `rw` mode (the rootfs directory mounted through VirtioFS will have some strange permission problems, which may only apply to those that cannot be mirrored), I don't have a better solution or idea for the time being (maybe I will find it later)**
+
 ## Build
 
 ```bash
